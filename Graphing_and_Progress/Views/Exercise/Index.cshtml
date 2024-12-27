@@ -1,0 +1,103 @@
+﻿@model List<KeyValuePair<DateOnly, int>>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+
+<h2>Exercise Data</h2>
+
+<div>
+    <canvas id="mealChart"></canvas>
+</div>
+@section Scripts {
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script>
+        console.log('Marcus');
+        var dateCalories = @Html.Raw(Json.Serialize(Model));
+        console.log(dateCalories);
+        console.log(dateCalories.length);
+
+        var dates = [];
+        var calories = [];
+
+
+        dateCalories.forEach(function (arrayItem, index)
+        { console.log("Item at index " + index + ":", arrayItem);
+        // Check if 'key' and 'value' properties exist in the current object
+        if (arrayItem.hasOwnProperty('key') && arrayItem.hasOwnProperty('value'))
+        { dates.push(arrayItem.key); calories.push(arrayItem.value);
+            console.log("Date Added:", dates[dates.length - 1]);
+        console.log("Calorie Added:", calories[calories.length - 1]);
+        } else
+        { console.error("Missing key or value property in item:", arrayItem); } });
+
+        const trendlineCalories = calculateTrendline(dates, calories);
+
+        var ctx = document.getElementById('mealChart').getContext('2d');
+        var mealChart = new Chart(ctx, {
+            type: 'line', // You can change the chart type (line, bar, etc.)
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                    label: 'Calorie Count',
+                    data: calories,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                    fill: false
+                    },
+                    {
+                    label: 'Trendline',
+                    data: trendlineCalories,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1, fill: false, borderDash: [5, 5]
+
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day',
+                            displayFormats: {
+                                day: 'MMM d'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Calories'
+                        }
+                    }
+                }
+            }
+        });
+
+        function calculateTrendline(dates, calories) {
+            let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0; const n = dates.length; for (let i = 0; i < n; i++)
+            {
+            const x = i;
+            const y = calories[i]; sumX += x; sumY += y; sumXY += x * y; sumXX += x * x;
+            }
+            const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+            const trendlineCalories = dates.map((_, i) => slope * i + intercept);
+            return trendlineCalories;
+        }
+
+
+    </script>
+}
